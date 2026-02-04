@@ -12,6 +12,7 @@ import Achievements from './components/Achievements';
 import Settings from './components/Settings';
 import PhoneModal from './components/PhoneModal';
 import AuthModal from './components/AuthModal';
+import AdminDashboard from './components/AdminDashboard';
 import axios from 'axios';
 
 function App() {
@@ -442,6 +443,15 @@ function App() {
                     <p className="text-gray-600">All your orders will be displayed here</p>
                   </div>
                 </div>
+              ) : (
+                <Navigate to="/" replace />
+              )
+            } />
+
+            {/* Admin Dashboard */}
+            <Route path="admin" element={
+              (user && (user.role === 'admin' || user.is_admin)) ? (
+                <AdminDashboard user={user} onLogout={handleLogout} />
               ) : (
                 <Navigate to="/" replace />
               )

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { 
-  Menu, 
-  X, 
-  ShoppingCart, 
-  User, 
+import {
+  Menu,
+  X,
+  ShoppingCart,
+  User,
   ChevronDown,
   Home,
   GraduationCap,
@@ -14,7 +14,8 @@ import {
   LogIn,
   LogOut,
   Leaf,
-  UserCircle
+  UserCircle,
+  Shield
 } from 'lucide-react';
 
 const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
@@ -50,7 +51,7 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
       <header className="bg-gradient-to-r from-emerald-50 to-green-50 backdrop-blur-sm border-b border-emerald-200 sticky top-0 z-50 shadow-lg shadow-emerald-100/30">
         <div className="container mx-auto px-4 py-3">
           <div className="flex items-center justify-between">
-            
+
             {/* Logo Section */}
             <div className="flex items-center gap-3">
               <Link to="/" className="flex items-center gap-3 hover:opacity-90 transition-opacity">
@@ -60,7 +61,7 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                   </div>
                   <div className="absolute -top-1 -right-1 w-4 h-4 bg-emerald-400 rounded-full animate-pulse"></div>
                 </div>
-                
+
                 <div className="hidden md:block">
                   <h1 className="text-2xl font-black tracking-tighter">
                     <span className="text-emerald-600">APEX</span>
@@ -84,10 +85,10 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                       {item.icon}
                       <span className="font-medium">{item.name}</span>
                       <ChevronDown size={16} className="transition-transform group-hover:rotate-180" />
-                      
+
                       {/* Academy Dropdown */}
                       {isAcademyDropdownOpen && (
-                        <div 
+                        <div
                           className="absolute top-full left-0 w-64 mt-2 bg-white border border-emerald-100 rounded-xl shadow-2xl shadow-emerald-100/50 p-4"
                           onMouseEnter={() => setIsAcademyDropdownOpen(true)}
                           onMouseLeave={() => setIsAcademyDropdownOpen(false)}
@@ -132,7 +133,7 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
 
             {/* User Actions */}
             <div className="flex items-center gap-4">
-              
+
               {/* Shopping Cart (Icon Only) */}
               <div className="relative">
                 <Link
@@ -158,7 +159,7 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                     <User size={18} />
                     <span>{user.name}</span>
                   </button>
-                  
+
                   {/* Profile Dropdown */}
                   {showProfileMenu && (
                     <div className="absolute top-full right-0 mt-2 w-48 bg-white border border-emerald-100 rounded-xl shadow-2xl p-2 z-50">
@@ -173,6 +174,18 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                         <UserCircle size={18} />
                         <span>My Profile</span>
                       </button>
+                      {(user.role === 'admin' || user.is_admin) && (
+                        <button
+                          onClick={() => {
+                            navigate('/admin');
+                            setShowProfileMenu(false);
+                          }}
+                          className="w-full flex items-center gap-2 px-4 py-2 text-emerald-600 hover:bg-emerald-50 rounded-lg transition-colors mt-1"
+                        >
+                          <Shield size={18} />
+                          <span>Admin Dashboard</span>
+                        </button>
+                      )}
                       <button
                         onClick={() => {
                           onLogout();
@@ -230,7 +243,7 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                     )}
                   </Link>
                 ))}
-                
+
                 {/* Mobile User Menu */}
                 {user ? (
                   <div className="mt-2 pt-2 border-t border-emerald-100">
@@ -245,6 +258,18 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                       <UserCircle size={18} />
                       <span>My Profile</span>
                     </button>
+                    {(user.role === 'admin' || user.is_admin) && (
+                      <button
+                        onClick={() => {
+                          navigate('/admin');
+                          setIsMobileMenuOpen(false);
+                        }}
+                        className="flex items-center gap-3 w-full px-4 py-3 text-emerald-600 hover:bg-emerald-50 rounded-xl transition-colors"
+                      >
+                        <Shield size={18} />
+                        <span>Admin Dashboard</span>
+                      </button>
+                    )}
                     <button
                       onClick={() => {
                         onLogout();
@@ -269,7 +294,7 @@ const Header = ({ user, onLoginClick, onLogout, cartCount = 0 }) => {
                   </button>
                 )}
               </div>
-              
+
               {/* Mobile Academy Courses */}
               <div className="mt-4 pl-4 border-l-2 border-emerald-200">
                 <h4 className="text-emerald-600 font-bold text-sm mb-2">ACADEMY COURSES</h4>
