@@ -52,7 +52,11 @@ const AuthModal = ({ close, setUser }) => {
 
       setTimeout(() => {
         close();
-        navigate('/');
+        if (data.user.role === 'admin' || data.user.is_admin) {
+          navigate('/admin');
+        } else {
+          navigate('/');
+        }
       }, 1200);
 
     } catch (err) {

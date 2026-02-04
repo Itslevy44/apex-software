@@ -10,6 +10,7 @@ import Cart from './components/Cart';
 import Profile from './components/Profile';
 import Achievements from './components/Achievements';
 import Settings from './components/Settings';
+import PhoneModal from './components/PhoneModal';
 import AuthModal from './components/AuthModal';
 import axios from 'axios';
 
@@ -24,6 +25,8 @@ function App() {
   const [userEnrollments, setUserEnrollments] = useState([]);
   const [userAchievements, setUserAchievements] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [showPhoneModal, setShowPhoneModal] = useState(false);
+  const [pendingCheckout, setPendingCheckout] = useState(null);
 
   // Save cart to localStorage whenever it changes
   useEffect(() => {
@@ -166,7 +169,7 @@ function App() {
     }
   };
 
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
     const existingProductIndex = cart.findIndex(item => item.id === product.id);
 
     if (existingProductIndex > -1) {
@@ -176,16 +179,50 @@ function App() {
     } else {
       setCart([...cart, { ...product, quantity: 1 }]);
     }
+
+    // Sync with backend if logged in
+    const token = localStorage.getItem('apex_token');
+    if (token) {
+      try {
+        await axios.post(`http://127.0.0.1:8000/api/cart/add/${product.id}`, { quantity: 1 }, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error('Failed to sync cart item with backend:', error);
+      }
+    }
   };
 
-  const removeFromCart = (index) => {
+  const removeFromCart = async (index) => {
+    const item = cart[index];
     const newCart = [...cart];
     newCart.splice(index, 1);
     setCart(newCart);
+
+    const token = localStorage.getItem('apex_token');
+    if (token && item) {
+      try {
+        await axios.delete(`http://127.0.0.1:8000/api/cart/remove/${item.id}`, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error('Failed to sync item removal with backend:', error);
+      }
+    }
   };
 
-  const clearCart = () => {
+  const clearCart = async () => {
     setCart([]);
+    const token = localStorage.getItem('apex_token');
+    if (token) {
+      try {
+        await axios.post('http://127.0.0.1:8000/api/cart/clear', {}, {
+          headers: { 'Authorization': `Bearer ${token}` }
+        });
+      } catch (error) {
+        console.error('Failed to clear cart on backend:', error);
+      }
+    }
   };
 
   const updateQuantity = (index, quantity) => {
@@ -227,37 +264,30 @@ function App() {
   const handleMpesaCheckout = async () => {
     if (!user) {
       setShowAuthModal(true);
-      alert('Please login to proceed with payment');
       return;
     }
 
     const total = cart.reduce((sum, item) => sum + (item.price * (item.quantity || 1)), 0);
-
     if (total === 0) {
       alert('Your cart is empty');
       return;
     }
 
-    if (total < 1) {
-      alert('Minimum payment amount is Ksh 1');
-      return;
-    }
+    // Capture current cart state for checkout
+    setPendingCheckout({ total });
+    setShowPhoneModal(true);
+  };
 
-    // Ask for phone number if not in user profile
-    let phone = user.phone;
-    if (!phone) {
-      phone = prompt('Please enter your M-Pesa phone number (format: 2547XXXXXXXX):');
-      if (!phone) {
-        alert('Payment cancelled');
-        return;
-      }
-    }
-
+  const processPayment = async (phone) => {
+    setShowPhoneModal(false);
     try {
       setLoading(true);
       const token = localStorage.getItem('apex_token');
 
-      // 1. Create Order
+      // 1. Ensure backend cart sync (optional but good for robustness)
+      // For now, assume Cart exists or create it on the fly if OrderController allows
+
+      // 2. Create Order
       const orderResponse = await axios.post('http://127.0.0.1:8000/api/orders', {}, {
         headers: { 'Authorization': `Bearer ${token}` }
       });
@@ -268,7 +298,7 @@ function App() {
 
       const orderId = orderResponse.data.data.id;
 
-      // 2. Initiate Payment
+      // 3. Initiate Payment
       await axios.post(`http://127.0.0.1:8000/api/orders/${orderId}/pay`, {
         phone: phone
       }, {
@@ -276,8 +306,6 @@ function App() {
       });
 
       alert("Payment initiated! Please check your phone for the M-Pesa PIN prompt.");
-
-      // 3. Clear cart and refresh
       setCart([]);
       fetchAllUserData();
 
@@ -286,6 +314,7 @@ function App() {
       alert(error.response?.data?.message || error.message || 'Checkout failed. Please try again.');
     } finally {
       setLoading(false);
+      setPendingCheckout(null);
     }
   };
 
@@ -430,13 +459,14 @@ function App() {
             isLoading={loading}
           />
         )}
+        {/* Phone Modal */}
+        <PhoneModal
+          isOpen={showPhoneModal}
+          onClose={() => setShowPhoneModal(false)}
+          onConfirm={processPayment}
+          initialValue={user?.phone || ''}
+        />
 
-        {/* Global notification for demo mode */}
-        {process.env.NODE_ENV === 'development' && (
-          <div className="fixed bottom-4 right-4 bg-amber-100 border border-amber-300 text-amber-800 px-4 py-2 rounded-lg shadow-lg text-sm">
-            <strong>Demo Mode:</strong> Using fallback data for demonstration
-          </div>
-        )}
       </div>
     </Router>
   );

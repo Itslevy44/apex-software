@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Settings as SettingsIcon, Bell, Shield, CreditCard, HelpCircle, Moon, User, Lock, Globe } from 'lucide-react';
+import axios from 'axios';
 
 const UserSettings = ({ user }) => {
   const navigate = useNavigate();
@@ -12,8 +13,22 @@ const UserSettings = ({ user }) => {
   });
   const [darkMode, setDarkMode] = useState(false);
 
-  const toggleNotification = (key) => {
-    setNotifications(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleNotification = async (key) => {
+    const newVal = !notifications[key];
+    setNotifications(prev => ({ ...prev, [key]: newVal }));
+
+    // Persist to backend
+    const token = localStorage.getItem('apex_token');
+    if (token) {
+      try {
+        await axios.post('http://127.0.0.1:8000/api/user/settings/notifications',
+          { key, value: newVal },
+          { headers: { 'Authorization': `Bearer ${token}` } }
+        );
+      } catch (error) {
+        console.error('Failed to update notification settings:', error);
+      }
+    }
   };
 
   return (
@@ -71,13 +86,11 @@ const UserSettings = ({ user }) => {
                   </div>
                   <button
                     onClick={() => toggleNotification(key)}
-                    className={`w-12 h-6 rounded-full transition-colors relative ${
-                      value ? 'bg-emerald-500' : 'bg-gray-300'
-                    }`}
+                    className={`w-12 h-6 rounded-full transition-colors relative ${value ? 'bg-emerald-500' : 'bg-gray-300'
+                      }`}
                   >
-                    <div className={`w-5 h-5 rounded-full bg-white transform transition-transform absolute top-0.5 ${
-                      value ? 'translate-x-7' : 'translate-x-1'
-                    }`}></div>
+                    <div className={`w-5 h-5 rounded-full bg-white transform transition-transform absolute top-0.5 ${value ? 'translate-x-7' : 'translate-x-1'
+                      }`}></div>
                   </button>
                 </div>
               ))}
@@ -93,21 +106,19 @@ const UserSettings = ({ user }) => {
             <div className="flex flex-wrap gap-4">
               <button
                 onClick={() => setDarkMode(false)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  !darkMode 
-                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md' 
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${!darkMode
+                    ? 'bg-gradient-to-r from-emerald-500 to-green-500 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 Light Mode
               </button>
               <button
                 onClick={() => setDarkMode(true)}
-                className={`px-6 py-3 rounded-lg font-medium transition-all ${
-                  darkMode 
-                    ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md' 
+                className={`px-6 py-3 rounded-lg font-medium transition-all ${darkMode
+                    ? 'bg-gradient-to-r from-gray-800 to-gray-900 text-white shadow-md'
                     : 'bg-gray-100 text-gray-700 hover:bg-gray-200'
-                }`}
+                  }`}
               >
                 Dark Mode
               </button>
