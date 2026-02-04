@@ -63,7 +63,7 @@ const Shop = () => {
   // Get unique categories
   const categories = ['All', ...new Set(products.map(p => p.category).filter(Boolean))];
 
-  const addToCart = (product) => {
+  const addToCart = async (product) => {
     // Check if user is logged in
     const token = localStorage.getItem('apex_token');
     if (!token) {
@@ -133,8 +133,8 @@ const Shop = () => {
               key={category}
               onClick={() => setSelectedCategory(category)}
               className={`px-5 py-2.5 rounded-xl font-medium transition-all ${selectedCategory === category
-                  ? 'bg-emerald-500 text-white'
-                  : 'bg-white border border-emerald-200 text-gray-700 hover:border-emerald-500'
+                ? 'bg-emerald-500 text-white'
+                : 'bg-white border border-emerald-200 text-gray-700 hover:border-emerald-500'
                 }`}
             >
               {category}
@@ -172,8 +172,8 @@ const Shop = () => {
                   onClick={() => addToCart(product)}
                   disabled={product.stock === 0}
                   className={`w-full py-3 rounded-lg font-bold transition-all ${product.stock === 0
-                      ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
-                      : 'bg-emerald-500 text-white hover:bg-emerald-600'
+                    ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+                    : 'bg-emerald-500 text-white hover:bg-emerald-600'
                     }`}
                 >
                   Add to Cart
